@@ -8,6 +8,7 @@ consumer = KafkaConsumer(
     auto_offset_reset='earliest',
     enable_auto_commit=True,
     group_id='my-group',
+    key_serializer=str.encode,
     value_deserializer=lambda x: loads(x.decode('utf-8')),
     consumer_timeout_ms=1000
 )
