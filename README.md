@@ -55,5 +55,6 @@
   - fetch.min.bytes는 한번에 가져가는 최대 데이터 사이즈인데 무한정 데이터가 차길 기다릴 수 없으니 시간제약을 준다고 생각하자.
 
 [참고]
+- https://github.com/dpkp/kafka-python/blob/master/example.py
 - https://github.com/dpkp/kafka-python
 - https://kafka-python.readthedocs.io/en/master/usage.html
