@@ -1,21 +1,33 @@
+import threading, time
 from kafka import KafkaConsumer
-from json import loads
+from json import loads, dumps
 
-# topic, broker list
-consumer = KafkaConsumer(
-    'test',
-    bootstrap_servers=['13.114.187.232:9092'],
-    auto_offset_reset='earliest',
-    enable_auto_commit=True,
-    group_id='my-group',
-    value_deserializer=lambda x: loads(x.decode('utf-8')),
-    consumer_timeout_ms=1000
-)
+BOOTSTRAP_SERVERS = "13.114.187.232:9092"
+TOPICS = "test"
+CONSUMER_GROUP = "test-group"
 
-# consumer 리스트를 가져온다
-print('[begin] get consumer list')
-for message in consumer:
-    print("Topic: %s, Partition: %d, Offset: %d, Key: %s, Value: %s" % (
-        message.topic, message.partition, message.offset, message.key, message.value
-    ))
-print('[end] get consumer list')
+class Consumer(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.stop_event = threading.Event()
+
+    def stop(self):
+        self.stop_event.set()
+
+    def run(self):
+        consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS,
+                                 auto_offset_reset='earliest',
+                                 group_id=CONSUMER_GROUP,
+                                 value_deserializer=lambda x: loads(x.decode('utf-8')),
+                                 max_poll_records = 2,
+                                 consumer_timeout_ms=1000)
+        
+        consumer.subscribe([TOPICS])
+
+        while not self.stop_event.is_set():
+            for message in consumer:
+                print(message)
+                if self.stop_event.is_set():
+                    break
+
+        consumer.close()

@@ -1,16 +1,35 @@
-# This is a sample Python script.
+from producer import Producer
+from consumer import Consumer
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+import threading, time
+from kafka import KafkaAdminClient
+from kafka.admin import NewTopic
+
+BOOTSTRAP_SERVERS = "13.114.187.232:9092"
+TOPICS = "test"
+CONSUMER_GROUP = "test-group"
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    # Create Topic
+    try:
+        admin = KafkaAdminClient(bootstrap_servers=BOOTSTRAP_SERVERS)
+        topic = NewTopic(name=TOPICS,
+                         num_partitions=1,
+                         replication_factor=1)
+        admin.create_topics([topic])
+    except Exception as e:
+        print(e)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    tasks = [Producer(), Consumer()]
+
+    for t in tasks:
+        t.start()
+
+    time.sleep(10)
+
+    for task in tasks:
+        task.stop()
+
+    for task in tasks:
+        task.join()

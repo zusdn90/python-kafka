@@ -1,18 +1,26 @@
+import threading, time
 from kafka import KafkaProducer
-from json import dumps
-import time
+from json import loads, dumps
 
-producer = KafkaProducer(acks=0,
-                         compression_type='gzip',
-                         bootstrap_servers=['13.114.187.232:9092'],
-                         key_serializer=str.encode,
-                         value_serializer=lambda x: dumps(x).encode('utf-8')
-                         )
+BOOTSTRAP_SERVERS = "13.114.187.232:9092"
+TOPICS = "test"    
+    
+class Producer(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.stop_event = threading.Event()
 
-start = time.time()
+    def stop(self):
+        self.stop_event.set()
 
-for i in range(10000):
-    producer.send('test', key= 'key_' + str(i), value='value_' + str(i))
-    producer.flush()
+    def run(self):
+        producer = KafkaProducer(acks="all",
+                                 compression_type='gzip',
+                                 bootstrap_servers=BOOTSTRAP_SERVERS,
+                                 value_serializer=lambda x: dumps(x).encode('utf-8'))
 
-print("elapsed :", time.time() - start)
+        while not self.stop_event.is_set():
+            producer.send(TOPICS, key= 'key_test', value='value_test')
+            time.sleep(1)
+
+        producer.close()
